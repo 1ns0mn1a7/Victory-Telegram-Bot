@@ -30,10 +30,9 @@ def help_command(update: Update, context: CallbackContext):
 def cancel(update: Update, context: CallbackContext):
     update.message.reply_text("Клавиатура скрыта. Введите /start, чтобы вернуть её.", reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
-    
-    
+
+
 def handle_new_question_request(update: Update, context: CallbackContext):
-    """Выдать случайный вопрос и перейти в состояние ожидания ответа."""
     db: redis.Redis = context.bot_data["db"]
     questions = context.bot_data["questions"]
     user_id = update.effective_user.id
@@ -51,7 +50,6 @@ def handle_new_question_request(update: Update, context: CallbackContext):
 
 
 def handle_give_up(update: Update, context: CallbackContext):
-    """Сдаться: показать ответ и сразу прислать следующий вопрос."""
     db: redis.Redis = context.bot_data["db"]
     questions = context.bot_data["questions"]
     user_id = update.effective_user.id
@@ -73,7 +71,6 @@ def handle_give_up(update: Update, context: CallbackContext):
 
 
 def handle_solution_attempt(update: Update, context: CallbackContext):
-    """Проверить ответ пользователя."""
     db: redis.Redis = context.bot_data["db"]
     user_id = update.effective_user.id
 
@@ -96,7 +93,6 @@ def handle_solution_attempt(update: Update, context: CallbackContext):
 
 
 def handle_score(update: Update, context: CallbackContext):
-    """Показать счёт пользователя."""
     db: redis.Redis = context.bot_data["db"]
     user_id = update.effective_user.id
     score = db.get(f"score:{user_id}") or 0
@@ -106,7 +102,7 @@ def handle_score(update: Update, context: CallbackContext):
 def main():
     env = Env()
     env.read_env()
-    
+
     token = env("TELEGRAM_BOT_TOKEN")
     if not token:
         raise RuntimeError("Не найден TELEGRAM_BОT_TOKEN в переменных окружения")
@@ -154,7 +150,7 @@ def main():
 
 if __name__ == "__main__":
     logging.basicConfig(
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.ERROR
     )
     logger = logging.getLogger(__name__)
     main()
