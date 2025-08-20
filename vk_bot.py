@@ -38,30 +38,26 @@ def handle_new_question(vk, db, questions, user_id):
         return
 
     question, answer = random.choice(questions)
-    db.set(f"quiz:{user_id}:q", question)
-    db.set(f"quiz:{user_id}:a", answer)
+    db.hset(f"vk:quiz:{user_id}", mapping={"q": question, "a": answer})
 
     send_message(vk, user_id, f"Вопрос:\n\n{question}", keyboard=build_keyboard())
 
 
 def handle_give_up(vk, db, questions, user_id):
-    answer = db.get(f"quiz:{user_id}:a")
+    answer = db.hget(f"vk:quiz:{user_id}", "a")
     if not answer:
         send_message(vk, user_id, "Сначала нажмите «Новый вопрос».", keyboard=build_keyboard())
         return
 
     send_message(vk, user_id, f"Правильный ответ:\n\n{answer}", keyboard=build_keyboard())
-    db.delete(f"quiz:{user_id}:q", f"quiz:{user_id}:a")
 
-    # сразу новый вопрос
     question_next, answer_next = random.choice(questions)
-    db.set(f"quiz:{user_id}:q", question_next)
-    db.set(f"quiz:{user_id}:a", answer_next)
+    db.hset(f"vk:quiz:{user_id}", mapping={"q": question_next, "a": answer_next})
     send_message(vk, user_id, f"Следующий вопрос:\n\n{question_next}", keyboard=build_keyboard())
 
 
 def handle_solution_attempt(vk, db, user_id, text):
-    correct = db.get(f"quiz:{user_id}:a")
+    correct = db.hget(f"vk:quiz:{user_id}", "a")
     if not correct:
         send_message(vk, user_id, "Нажмите «Новый вопрос», чтобы начать.", keyboard=build_keyboard())
         return
@@ -72,14 +68,15 @@ def handle_solution_attempt(vk, db, user_id, text):
     if user_ans == true_ans:
         send_message(vk, user_id, "Правильно! Поздравляю! Для следующего вопроса нажми «Новый вопрос»",
                      keyboard=build_keyboard())
-        db.delete(f"quiz:{user_id}:q", f"quiz:{user_id}:a")
-        db.incr(f"score:{user_id}")  # увеличиваем счёт
+        db.delete(f"vk:quiz:{user_id}")
+        db.incr(f"vk:score:{user_id}")
     else:
         send_message(vk, user_id, "Неправильно... Попробуешь ещё раз?", keyboard=build_keyboard())
 
 
 def handle_score(vk, db, user_id):
-    score = db.get(f"score:{user_id}") or 0
+    raw = db.get(f"vk:score:{user_id}")
+    score = int(raw) if raw is not None else 0
     send_message(vk, user_id, f"Ваш счёт: {score}", keyboard=build_keyboard())
 
 
